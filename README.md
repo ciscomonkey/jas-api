@@ -19,7 +19,8 @@ The following API endpoints are available:
 
 # Development Notes
 
-This project uses [poetry](https://python-poetry.org/) to manage python dependencies.
+This project uses [poetry](https://python-poetry.org/) to manage python dependencies.  In order to support
+using ```.env``` files install the [poetry-dotenv-plugin](https://github.com/mpeteuil/poetry-dotenv-plugin) as well.
 
 To get started:
 ```shell
