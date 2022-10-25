@@ -19,16 +19,10 @@ The following API endpoints are available:
 
 # Development Notes
 
-Building Docker image:
-
-```shell
-docker build --tag jas .
-```
-
 When running the API as a docker image, set the ```BASE_URL``` to the volume mount point on your filesystem.  
 In this example we're mapping ```./jabber/``` to ```/jabber``` in the container.  
 ```shell
-docker run -it -d -p 8000:8000 --enf-file .env --name jas -v ${PWD}/jabber:/jabber jas
+docker run -it -d -p 8000:8000 --enf-file .env --name jas -v ${PWD}/jabber:/jabber ghcr.io/ciscomonkey/jas-api
 ```
 
 The directory you use for the mountpoint should have 3 directories in it:
@@ -40,4 +34,10 @@ jabber
 └── xml
 ```
 
-The installers and xml should be served up by the web server.
+The installers and xml directories should be served up by the web server.
+
+Building Docker image:
+
+```shell
+docker build --tag jas .
+```
