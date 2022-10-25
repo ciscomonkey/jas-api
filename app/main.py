@@ -2,10 +2,9 @@
 Jabber Auto Update Server API
 """
 
-from gettext import install
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
-from functools import lru_cache
 from lxml import etree
 from pathlib import Path
 from pydantic import BaseModel
@@ -16,6 +15,8 @@ import shutil
 import yaml
 import zipfile
 
+
+load_dotenv()
 
 BASE_DIR = os.getenv("BASE_DIR")
 BASE_URL = os.getenv("BASE_URL")
