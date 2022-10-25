@@ -22,7 +22,7 @@ The following API endpoints are available:
 When running the API as a docker image, set the ```BASE_URL``` to the volume mount point on your filesystem.  
 In this example we're mapping ```./jabber/``` to ```/jabber``` in the container.  
 ```shell
-docker run -it -d -p 8000:8000 --enf-file .env --name jas -v ${PWD}/jabber:/jabber ghcr.io/ciscomonkey/jas-api
+docker run -it -d -p 8000:8000 --env-file .env --name jas -v ${PWD}/jabber:/jabber ghcr.io/ciscomonkey/jas-api
 ```
 
 The directory you use for the mountpoint should have 3 directories in it:
@@ -41,3 +41,5 @@ Building Docker image:
 ```shell
 docker build --tag jas .
 ```
+
+API Documentation will be available at ```http://localhost:8000/docs```
