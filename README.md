@@ -19,6 +19,24 @@ The following API endpoints are available:
 
 # Development Notes
 
+This project uses [poetry](https://python-poetry.org/) to manage python dependencies.
+
+To get started:
+```shell
+git clone https://github.com/ciscomonkey/jas-api .
+poetry install
+```
+
+Populate a ```.env``` file with the environment variables listed above, then:
+
+```shell
+poetry run uvicorn app.main:app --reload --host localhost --port 8000
+```
+
+API Documentation will be available at ```http://localhost:8000/docs```
+
+# Docker Notes
+
 When running the API as a docker image, set the ```BASE_URL``` to the volume mount point on your filesystem.  
 In this example we're mapping ```./jabber/``` to ```/jabber``` in the container.  
 ```shell
@@ -41,5 +59,3 @@ Building Docker image:
 ```shell
 docker build --tag jas .
 ```
-
-API Documentation will be available at ```http://localhost:8000/docs```
