@@ -4,10 +4,10 @@ This API is used to manage installers and configuration files for a Jabber Auto 
 
 The following environmental variables are used:
 
-* ```JAS_BASE_URL``` - Base URL for installer and xml files.
-* ```JAS_BASE_DIR``` - Base direcory for installer, metadata, and xml files.
-* ```JAS_API_TOKEN``` - Authorization token to interact with API
-* ```JAS_DOCS``` - Enable FastAPI Docs urls.
+* ```BASE_URL``` - Base URL for installer and xml files.
+* ```BASE_DIR``` - Base direcory for installer, metadata, and xml files.
+* ```TOKEN``` - Authorization token to interact with API
+* ```DOCS``` - Enable FastAPI Docs urls.
 
 The following API endpoints are available:
 
@@ -16,5 +16,28 @@ The following API endpoints are available:
 * ```/xml``` (GET/POST) - List/Create jabber-config XML files
 * ```/xml/:filename:``` (DELETE/GET/PUT) - Delete/Get/Update details of XML file
 
+
 # Development Notes
 
+Building Docker image:
+
+```shell
+docker build --tag jas .
+```
+
+When running the API as a docker image, set the ```BASE_URL``` to the volume mount point on your filesystem.  
+In this example we're mapping ```./jabber/``` to ```/jabber``` in the container.  
+```shell
+docker run -it -d -p 8000:8000 --enf-file .env --name jas -v ${PWD}/jabber:/jabber jas
+```
+
+The directory you use for the mountpoint should have 3 directories in it:
+
+```shell
+jabber
+├── .meta
+├── installers
+└── xml
+```
+
+The installers and xml should be served up by the web server.
