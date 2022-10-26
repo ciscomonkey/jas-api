@@ -8,6 +8,7 @@ The following environmental variables are used:
 * ```BASE_DIR``` - Base direcory for installer, metadata, and xml files.
 * ```TOKEN``` - Authorization token to interact with API
 * ```DOCS``` - Enable FastAPI Docs urls.
+* ```ROOT_PATH``` - Passed to FastAPI for Docs urls.
 
 The following API endpoints are available:
 
