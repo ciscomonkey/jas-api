@@ -22,6 +22,7 @@ BASE_DIR = os.getenv("BASE_DIR")
 BASE_URL = os.getenv("BASE_URL")
 TOKEN = os.getenv("TOKEN")
 DOCS = os.getenv("DOCS")
+ROOT_PATH = os.getenv("ROOT_PATH", None)
 
 if DOCS:
     docs_url = "/docs"
@@ -36,6 +37,7 @@ app = FastAPI(
     version="0.1.0",
     docs_url=docs_url,
     redoc_url=redoc_url,
+    root_path=ROOT_PATH
 )
 
 
