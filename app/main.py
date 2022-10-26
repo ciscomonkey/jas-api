@@ -31,13 +31,20 @@ else:
     docs_url = None
     redoc_url = None
 
+tags_metadata = [
+    {"name": "Clients", "description": "Manage Jabber upgrade packages"},
+    {"name": "XML", "description": "Manage autoupdate XML files."},
+]
+
+
 app = FastAPI(
     title="Jabber Auto Update Server API",
     description="This API is used to manage installers and configuration files for a Jabber Auto Update server.",
     version="0.1.0",
+    openapi_tags=tags_metadata,
     docs_url=docs_url,
     redoc_url=redoc_url,
-    root_path=ROOT_PATH
+    root_path=ROOT_PATH,
 )
 
 
@@ -81,7 +88,7 @@ def load_meta():
     return {"mac": mac, "win": win}
 
 
-@app.get("/clients", dependencies=[Depends(verify_token)])
+@app.get("/clients", dependencies=[Depends(verify_token)], tags=["Clients"])
 def list_clients(platform: str = None):
 
     if platform is None:
@@ -104,7 +111,7 @@ def list_clients(platform: str = None):
     return meta
 
 
-@app.post("/newclient", dependencies=[Depends(verify_token)])
+@app.post("/newclient", dependencies=[Depends(verify_token)], tags=["Clients"])
 def add_client(
     downloadURL: Optional[str] = Form(None),
     file: UploadFile = File(...),
@@ -143,7 +150,7 @@ def add_client(
                 shutil.copyfileobj(file.file, buffer)
 
             metafile = metadir / f"mac-{version_info}.yaml"
-            url = f"{BASE_URL}/Installers/{version_info}/{newfile.name}"
+            url = f"{BASE_URL}/installers/{version_info}/{newfile.name}"
             meta = {
                 "LatestBuildNum": build,
                 "LatestVersion": version,
@@ -185,7 +192,7 @@ def add_client(
             shutil.move(tmp_path.joinpath("CiscoJabberSetup.msi"), newfile)
 
             metafile = metadir / f"win-{version_info}.yaml"
-            url = f"{BASE_URL}/Installers/{version_info}/{newfile.name}"
+            url = f"{BASE_URL}/installers/{version_info}/{newfile.name}"
             meta = {
                 "LatestBuildNum": build,
                 "LatestVersion": version,
@@ -229,7 +236,7 @@ def getCurrentVersions(filename):
     return result
 
 
-@app.get("/xml", dependencies=[Depends(verify_token)])
+@app.get("/xml", dependencies=[Depends(verify_token)], tags=["XML"])
 def list_xml(details: bool = True):
     xmldir = Path(BASE_DIR) / "xml/"
     xmls = {}
@@ -242,7 +249,7 @@ def list_xml(details: bool = True):
     return list(xmls.keys())
 
 
-@app.get("/xml/{filename}", dependencies=[Depends(verify_token)])
+@app.get("/xml/{filename}", dependencies=[Depends(verify_token)], tags=["XML"])
 def get_xml(filename):
     filename = Path(BASE_DIR) / "xml/" / filename
     if not filename.exists():
@@ -260,7 +267,7 @@ def get_client_meta_data(platform: str, version: str):
     return data
 
 
-@app.post("/xml", dependencies=[Depends(verify_token)])
+@app.post("/xml", dependencies=[Depends(verify_token)], tags=["XML"])
 def add_xml(filename: str = Form(...), mac: str = Form(...), win: str = Form(...)):
     xmldir = Path(BASE_DIR) / "xml/"
     newfile = xmldir / filename
@@ -303,7 +310,7 @@ def add_xml(filename: str = Form(...), mac: str = Form(...), win: str = Form(...
     return {"message": f"Created {filename}."}
 
 
-@app.put("/xml/{filename}", dependencies=[Depends(verify_token)])
+@app.put("/xml/{filename}", dependencies=[Depends(verify_token)], tags=["XML"])
 def update_xml(
     filename: str,
     mac: Optional[str] = Form(None),
@@ -346,7 +353,7 @@ def update_xml(
     return {"message": f"Updated {filename}"}
 
 
-@app.delete("/xml/{filename}", dependencies=[Depends(verify_token)])
+@app.delete("/xml/{filename}", dependencies=[Depends(verify_token)], tags=["XML"])
 def delete_xml(filename: str):
     xmlfile = Path(BASE_DIR) / f"xml/{filename}"
     if not xmlfile.exists():
