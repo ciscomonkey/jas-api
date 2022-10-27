@@ -2,13 +2,14 @@
 Jabber Auto Update Server API
 """
 
-from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
+from functools import lru_cache
 from lxml import etree
 from pathlib import Path
-from pydantic import BaseModel
 from typing import Optional
+from . import config
+from . import schema
 import os
 import re
 import shutil
@@ -16,64 +17,33 @@ import yaml
 import zipfile
 
 
-load_dotenv()
+@lru_cache()
+def get_settings():
+    return config.Settings()
 
-BASE_DIR = os.getenv("BASE_DIR")
-BASE_URL = os.getenv("BASE_URL")
-TOKEN = os.getenv("TOKEN")
-DOCS = os.getenv("DOCS")
-ROOT_PATH = os.getenv("ROOT_PATH", None)
 
-if DOCS:
-    docs_url = "/docs"
-    redoc_url = "/redoc"
-else:
-    docs_url = None
-    redoc_url = None
-
-tags_metadata = [
-    {"name": "Clients", "description": "Manage Jabber upgrade packages"},
-    {"name": "XML", "description": "Manage autoupdate XML files."},
-]
-
+settings = get_settings()
 
 app = FastAPI(
     title="Jabber Auto Update Server API",
     description="This API is used to manage installers and configuration files for a Jabber Auto Update server.",
     version="0.1.0",
-    openapi_tags=tags_metadata,
-    docs_url=docs_url,
-    redoc_url=redoc_url,
-    root_path=ROOT_PATH,
+    openapi_tags=schema.tags_metadata,
+    openapi_url=settings.openapi_url,
 )
 
 
-class JabberClient(BaseModel):
-    build: str
-    downloadURL: str = None
-    name: str
-    message: str = None
-    platform: str
-    version: str
-
-
-class JabberXML(BaseModel):
-    name: str
-    mac: JabberClient
-    win: JabberClient
-
-
 async def verify_token(x_api_token: str = Header()):
-    if x_api_token != TOKEN:
+    if x_api_token != settings.token:
         raise HTTPException(status_code=401, detail="Missing Auth Token")
 
 
 def load_meta():
-    metadir = Path(BASE_DIR) / ".meta/"
+    metadir = Path(settings.base_dir) / ".meta/"
     print(f"{metadir=}")
     mac = {}
     win = {}
-    for path in metadir.glob(f"*.yaml"):
+    for path in metadir.glob("*.yaml"):
         with open(path, "r") as stream:
             data = yaml.safe_load(stream)
         if path.name.startswith("mac"):
@@ -117,9 +87,9 @@ def add_client(
     file: UploadFile = File(...),
     message: str = Form(...),
 ):
-    metadir = Path(BASE_DIR) / ".meta/"
-    installerdir = Path(BASE_DIR) / "installers/"
-    xmldir = Path(BASE_DIR) / "xml/"
+    metadir = Path(settings.base_dir) / ".meta/"
+    installerdir = Path(settings.base_dir) / "installers/"
+    xmldir = Path(settings.base_dir) / "xml/"
     try:
         if file.filename.startswith("CiscoJabberMac") and file.filename.endswith(
             "-AutoUpdate.zip"
@@ -150,7 +120,7 @@ def add_client(
                 shutil.copyfileobj(file.file, buffer)
 
             metafile = metadir / f"mac-{version_info}.yaml"
-            url = f"{BASE_URL}/installers/{version_info}/{newfile.name}"
+            url = f"{settings.base_url}/installers/{version_info}/{newfile.name}"
             meta = {
                 "LatestBuildNum": build,
                 "LatestVersion": version,
@@ -192,7 +162,7 @@ def add_client(
             shutil.move(tmp_path.joinpath("CiscoJabberSetup.msi"), newfile)
 
             metafile = metadir / f"win-{version_info}.yaml"
-            url = f"{BASE_URL}/installers/{version_info}/{newfile.name}"
+            url = f"{settings.base_url}/installers/{version_info}/{newfile.name}"
             meta = {
                 "LatestBuildNum": build,
                 "LatestVersion": version,
@@ -238,7 +208,7 @@ def getCurrentVersions(filename):
 
 @app.get("/xml", dependencies=[Depends(verify_token)], tags=["XML"])
 def list_xml(details: bool = True):
-    xmldir = Path(BASE_DIR) / "xml/"
+    xmldir = Path(settings.base_dir) / "xml/"
     xmls = {}
     for path in xmldir.glob(f"*.xml"):
         xmls[path.name] = getCurrentVersions(path)
@@ -251,7 +221,7 @@ def list_xml(details: bool = True):
 
 @app.get("/xml/{filename}", dependencies=[Depends(verify_token)], tags=["XML"])
 def get_xml(filename):
-    filename = Path(BASE_DIR) / "xml/" / filename
+    filename = Path(settings.base_dir) / "xml/" / filename
     if not filename.exists():
         raise Exception(f"{filename} was not found")
     data = getCurrentVersions(filename)
@@ -259,7 +229,7 @@ def get_xml(filename):
 
 
 def get_client_meta_data(platform: str, version: str):
-    metafile = Path(BASE_DIR) / f".meta/{platform}-{version}.yaml"
+    metafile = Path(settings.base_dir) / f".meta/{platform}-{version}.yaml"
     if not metafile.exists():
         return False
     with open(metafile, "r") as stream:
@@ -269,7 +239,7 @@ def get_client_meta_data(platform: str, version: str):
 
 @app.post("/xml", dependencies=[Depends(verify_token)], tags=["XML"])
 def add_xml(filename: str = Form(...), mac: str = Form(...), win: str = Form(...)):
-    xmldir = Path(BASE_DIR) / "xml/"
+    xmldir = Path(settings.base_dir) / "xml/"
     newfile = xmldir / filename
     if newfile.exists():
         return JSONResponse(
@@ -329,7 +299,7 @@ def update_xml(
     if win is not None:
         windata = get_client_meta_data("win", win)
 
-    fname = Path(BASE_DIR) / f"xml/{filename}"
+    fname = Path(settings.base_dir) / f"xml/{filename}"
     parser = etree.XMLParser(strip_cdata=False)
     tree = etree.parse(f"{fname}", parser)
 
@@ -355,7 +325,7 @@ def update_xml(
 
 @app.delete("/xml/{filename}", dependencies=[Depends(verify_token)], tags=["XML"])
 def delete_xml(filename: str):
-    xmlfile = Path(BASE_DIR) / f"xml/{filename}"
+    xmlfile = Path(settings.base_dir) / f"xml/{filename}"
     if not xmlfile.exists():
         return JSONResponse(
             status_code=404,

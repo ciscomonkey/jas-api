@@ -4,11 +4,11 @@ This API is used to manage installers and configuration files for a Jabber Auto 
 
 The following environmental variables are used:
 
-* ```BASE_URL``` - Base URL for installer and xml files.
 * ```BASE_DIR``` - Base direcory for installer, metadata, and xml files.
-* ```TOKEN``` - Authorization token to interact with API
-* ```DOCS``` - Enable FastAPI Docs urls.
+* ```BASE_URL``` - Base URL for installer and xml files.
+* ```OPENAPI_URL``` - Leave blank to disable FastAPI Docs urls.
 * ```ROOT_PATH``` - Passed to FastAPI for Docs urls.
+* ```TOKEN``` - Authorization token to interact with API
 
 The following API endpoints are available:
 
