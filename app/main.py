@@ -40,7 +40,6 @@ async def verify_token(x_api_token: str = Header()):
 
 def load_meta():
     metadir = Path(settings.base_dir) / ".meta/"
-    print(f"{metadir=}")
     mac = {}
     win = {}
     for path in metadir.glob("*.yaml"):
